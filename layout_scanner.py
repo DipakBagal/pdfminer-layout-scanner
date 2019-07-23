@@ -151,7 +151,7 @@ def parse_lt_objs(lt_objs, page_number, images_folder, text_content=None):
     # k=(x0, x1) of the bbox, v=list of text strings within that bbox width (physical column)
     page_text = {}
     for lt_obj in lt_objs:
-        if isinstance(lt_obj, LTTextBox) or isinstance(lt_obj, LTTextLine):
+        if isinstance(lt_obj, (LTTextBox, LTTextLine)):
             # text, so arrange is logically based on its column width
             page_text = update_page_text_hash(page_text, lt_obj)
         elif isinstance(lt_obj, LTImage):
