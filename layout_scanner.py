@@ -77,7 +77,7 @@ def write_file(folder, filename, filedata, flags="w"):
 def determine_image_type(stream_first_4_bytes):
     """Find out the image file type based on the magic number comparison of the first 4 (or 2) bytes"""
     file_type = None
-    bytes_as_hex = b2a_hex(stream_first_4_bytes)
+    bytes_as_hex = str(b2a_hex(stream_first_4_bytes))
     if bytes_as_hex.startswith("ffd8"):
         file_type = ".jpeg"
     elif bytes_as_hex == "89504e47":
