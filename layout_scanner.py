@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import sys
 import os
@@ -58,11 +58,7 @@ def get_toc(pdf_doc, pdf_pwd=""):
     return with_pdf(pdf_doc, _parse_toc, pdf_pwd)
 
 
-###
 # Extracting Images
-###
-
-
 def write_file(folder, filename, filedata, flags="w"):
     """Write the file data to the folder and filename combination
     (flags: 'w' for write text, 'wb' for write binary, use 'a' instead of 'w' for append)"""
@@ -187,11 +183,7 @@ def parse_lt_objs(lt_objs, page_number, images_folder, text_content=None):
     return "\n".join(text_content)
 
 
-###
 # Processing Pages
-###
-
-
 def _parse_pages(doc, images_folder):
     """With an open PDFDocument object, get the pages and parse each one
     [this is a higher-order function to be passed to with_pdf()]"""
