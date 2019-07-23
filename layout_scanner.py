@@ -120,15 +120,12 @@ def to_bytestring(s, enc="utf-8"):
 
 def update_page_text_hash(h, lt_obj, pct=0.2):
     """Use the bbox x0,x1 values within pct% to produce lists of associated text within the hash"""
-
-    x0 = lt_obj.bbox[0]
-    x1 = lt_obj.bbox[2]
+    x0, y0, x1, y1 = lt_obj.bbox
 
     key_found = False
     for k, v in list(h.items()):
-        hash_x0 = k[0]
+        hash_x0, hash_x1 = k
         if x0 >= (hash_x0 * (1.0 - pct)) and (hash_x0 * (1.0 + pct)) >= x0:
-            hash_x1 = k[1]
             if x1 >= (hash_x1 * (1.0 - pct)) and (hash_x1 * (1.0 + pct)) >= x1:
                 # the text inside this LT* object was positioned at the same
                 # width as a prior series of text, so it belongs together
