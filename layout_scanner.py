@@ -130,7 +130,7 @@ def update_page_text_hash (h, lt_obj, pct=0.2):
     x1 = lt_obj.bbox[2]
 
     key_found = False
-    for k, v in h.items():
+    for k, v in list(h.items()):
         hash_x0 = k[0]
         if x0 >= (hash_x0 * (1.0-pct)) and (hash_x0 * (1.0+pct)) >= x0:
             hash_x1 = k[1]
@@ -164,12 +164,12 @@ def parse_lt_objs (lt_objs, page_number, images_folder, text_content=None):
                 # use html style <img /> tag to mark the position of the image within the text
                 text_content.append('<img src="'+os.path.join(images_folder, saved_file)+'" />')
             else:
-                print >> sys.stderr, "error saving image on page", page_number, lt_obj.__repr__
+                print("error saving image on page", page_number, lt_obj.__repr__, file=sys.stderr)
         elif isinstance(lt_obj, LTFigure):
             # LTFigure objects are containers for other LT* objects, so recurse through the children
             text_content.append(parse_lt_objs(lt_obj, page_number, images_folder, text_content))
 
-    for k, v in sorted([(key,value) for (key,value) in page_text.items()]):
+    for k, v in sorted([(key,value) for (key,value) in list(page_text.items())]):
         # sort the page_text hash by the keys (x0,x1 values of the bbox),
         # which produces a top-down, left-to-right sequence of related columns
         text_content.append(''.join(v))
