@@ -1,3 +1,7 @@
 *.pyc
 *~
 *.swp
+MANIFEST
+PDF_Layout_Scanner.egg-info/
+build/
+dist/
