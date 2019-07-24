@@ -226,4 +226,4 @@ def _parse_pages(doc, images_folder):
 
 def get_pages(pdf_doc, pdf_pwd="", images_folder="/tmp"):
     """Process each of the pages in this pdf file and return a list of strings representing the text found in each page"""
-    return with_pdf(pdf_doc, _parse_pages, pdf_pwd, *tuple([images_folder]))
+    return with_pdf(pdf_doc, _parse_pages, pdf_pwd, images_folder)
