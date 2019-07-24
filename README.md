@@ -14,6 +14,13 @@ stops.
 
 **This code is still a work-in-progress, with room for improvement.**
 
+# Install
+Since it's available on PyPI, it's super easy to instal.
+
+```
+pip3 install pdf_layout_scanner
+```
+
 # Advantages over PDFMiner
 This script will extract text from PDFs with *multiple columns*.
 
