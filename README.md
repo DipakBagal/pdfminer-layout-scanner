@@ -1,6 +1,8 @@
 # About
-PDFMiner (http://www.unixuser.org/~euske/python/pdfminer/index.html)
-is a pdf parsing library written in Python by Yusuke Shinyama.
+This script converts PDF to txt using PDFMiner
+(http://www.unixuser.org/~euske/python/pdfminer/index.html).
+
+PDFMiner is a pdf parsing library written in Python by Yusuke Shinyama.
 
 In addition to the pdf2txt.py and dumppdf.py command line tools, there
 is a way of analyzing the content tree of each page programmatically.
@@ -11,6 +13,9 @@ PDFMiner, which continues where the default documentation
 stops.
 
 **This code is still a work-in-progress, with room for improvement.**
+
+# Advantages over PDFMiner
+This script will extract text from PDFs with *multiple columns*.
 
 # Usage
 ## General Usage
