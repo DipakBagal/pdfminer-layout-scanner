@@ -11,7 +11,7 @@ from pdfminer.pdfdocument import PDFDocument, PDFNoOutlines
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.converter import PDFPageAggregator
-from pdfminer.layout import LAParams, LTTextBox, LTTextLine, LTFigure, LTImage, LTChar
+from pdfminer.layout import LAParams, LTTextBox, LTTextLine, LTFigure, LTImage, LTChar, LTPage
 from logging import getLogger, StreamHandler, Formatter, DEBUG, INFO, WARN
 formatter = Formatter('%(asctime)s %(name)s[%(levelname)s] %(message)s', "%Y-%m-%d %H:%M:%S")
 logger = getLogger(__name__)
@@ -240,7 +240,29 @@ def _parse_pages(doc, images_folder, return_df=False, progressbar=False):
     if return_df: return pd.concat(text_content)
     else: return text_content
 
+def _get_page_size(doc, images_folder):
+    """With an open PDFDocument object, get the pages and parse each one
+    [this is a higher-order function to be passed to with_pdf()]"""
+    rsrcmgr = PDFResourceManager()
+    laparams = LAParams(detect_vertical=True, all_texts=True)
+    # all_texts will enable layout analysis in LTFigure objs
+    device = PDFPageAggregator(rsrcmgr, laparams=laparams)
+    interpreter = PDFPageInterpreter(rsrcmgr, device)
+
+    sizes = []
+    for i, page in enumerate(PDFPage.create_pages(doc)):
+        interpreter.process_page(page)
+        # receive the LTPage object for this page
+        layout = device.get_result()
+        # layout is an LTPage object which may contain child objects like LTTextBox, LTFigure, LTImage, etc.
+        sizes.append(layout.cropbox)
+    return sizes
+
 
 def get_pages(pdf_doc, pdf_pwd="", images_folder="/tmp", return_df=False, progressbar=False):
     """Process each of the pages in this pdf file and return a list of strings representing the text found in each page"""
     return with_pdf(pdf_doc, _parse_pages, pdf_pwd, images_folder, return_df, progressbar)
+
+def get_sizes(pdf_doc, pdf_pwd=""):
+    '''get the sizes of each page'''
+    return with_pdf(pdf_doc, _get_page_size, pdf_pwd)
