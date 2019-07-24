@@ -20,7 +20,7 @@ This script will extract text from PDFs with *multiple columns*.
 # Usage
 ## General Usage
 ```python
-import layout_scanner
+from pdf_layout_scanner import layout_scanner
 
 # get a list of the table of contents
 get_toc()
@@ -31,7 +31,7 @@ get_pages()
 
 ## Practical examples
 ```python
-import layout_scanner
+from pdf_layout_scanner import layout_scanner
 toc=layout_scanner.get_toc('/path/to/your/pdf-file.pdf')
 print(len(toc))
 # the number of elements in the pdf document's table of contents
