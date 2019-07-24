@@ -70,17 +70,10 @@ def get_toc(pdf_doc, pdf_pwd=""):
 def write_file(folder, filename, filedata, flags="w"):
     """Write the file data to the folder and filename combination
     (flags: 'w' for write text, 'wb' for write binary, use 'a' instead of 'w' for append)"""
-    result = False
     if os.path.isdir(folder):
-        try:
-            file_obj = open(os.path.join(folder, filename), flags)
-            file_obj.write(filedata)
-            file_obj.close()
-            result = True
-        except IOError:
-            pass
-    return result
-
+        file_obj = open(os.path.join(folder, filename), flags)
+        file_obj.write(filedata)
+        file_obj.close()
 
 def determine_image_type(stream_first_4_bytes):
     """Find out the image file type based on the magic number comparison of the first 4 (or 2) bytes"""
@@ -99,23 +92,20 @@ def determine_image_type(stream_first_4_bytes):
 
 def save_image(lt_image, page_number, images_folder):
     """Try to save the image data from this LTImage object, and return the file name, if successful"""
-    result = None
-    if lt_image.stream:
-        file_stream = lt_image.stream.get_rawdata()
-        if file_stream:
-            file_ext = determine_image_type(file_stream[0:4])
-            if file_ext:
-                file_name = "".join([str(page_number), "_", lt_image.name, file_ext])
-                if write_file(images_folder, file_name, file_stream, flags="wb"):
-                    result = file_name
-    return result
+    if not lt_image.stream: raise RuntimeError
+
+    file_stream = lt_image.stream.get_rawdata()
+    if not file_stream: raise RuntimeError
+
+    file_ext = determine_image_type(file_stream[0:4])
+    if not file_ext: raise RuntimeError
+
+    file_name = "".join([str(page_number), "_", lt_image.name, file_ext])
+    write_file(images_folder, file_name, file_stream, flags="wb")
+    return file_name
 
 
-###
 # Extracting Text
-###
-
-
 def to_bytestring(s, enc="utf-8"):
     """Convert the given unicode string to a bytestring, using the standard encoding,
     unless it's already a bytestring"""
@@ -167,44 +157,61 @@ def store_new_line(df, lt_obj, pct, logger=logger):
         ]
     return df
 
-def parse_lt_objs(lt_objs, page_number, images_folder, text_content=None, logger=logger):
+def parse_lt_objs(
+        lt_objs, page_number, images_folder, text_content=None,
+        return_df=False, progressbar=False,
+        logger=logger,
+):
     """Iterate through the list of LT* objects and capture the text or image data contained in each"""
     if text_content is None:
         text_content = []
 
+    if progressbar:
+        generator = tqdm(lt_objs, desc='parse objs')
+    else:
+        generator = lt_objs
+
     page_text = None
     # k=(x0, x1) of the bbox, v=list of text strings within that bbox width (physical column)
-    for lt_obj in tqdm(lt_objs, desc='parse objs'):
+    for lt_obj in generator:
         if isinstance(lt_obj, (LTTextBox, LTTextLine, LTChar)):
             # text, so arrange is logically based on its column width
             page_text = update_page_text(page_text, lt_obj)
         elif isinstance(lt_obj, LTImage):
             # an image, so save it to the designated folder, and note its place in the text
-            saved_file = save_image(lt_obj, page_number, images_folder)
-            if saved_file:
+            try:
+                saved_file = save_image(lt_obj, page_number, images_folder)
                 # use html style <img /> tag to mark the position of the image within the text
                 text_content.append(
                     '<img src="' + os.path.join(images_folder, saved_file) + '" />'
                 )
-            else:
+            except (IOError, RuntimeError):
                 logger.error("failed to save image on page{} {}".format(page_number, lt_obj))
         elif isinstance(lt_obj, LTFigure):
             # LTFigure objects are containers for other LT* objects, so recurse through the children
             text_content.append(
-                parse_lt_objs(lt_obj, page_number, images_folder, text_content)
+                parse_lt_objs(
+                    lt_obj, page_number, images_folder, text_content,
+                    return_df=return_df, progressbar=progressbar,
+                )
             )
 
     if page_text is None:
-        return ''
+        if return_df:
+            return pd.DataFrame()
+        else: return ''
 
-    page_text = page_text.sort_values('y0')
-    page_text = page_text['str'].apply(lambda x: text_content.append(''.join(x)))
-
-    return "\n".join(text_content)
+    if return_df:
+        text_content.append(page_text)
+        return pd.concat(text_content)
+    else:
+        page_text = page_text.sort_values('y0')
+        page_text = page_text['str'].apply(lambda x: text_content.append(''.join(x)))
+        return "\n".join(text_content)
 
 
 # Processing Pages
-def _parse_pages(doc, images_folder):
+def _parse_pages(doc, images_folder, return_df=False, progressbar=False):
     """With an open PDFDocument object, get the pages and parse each one
     [this is a higher-order function to be passed to with_pdf()]"""
     rsrcmgr = PDFResourceManager()
@@ -213,17 +220,27 @@ def _parse_pages(doc, images_folder):
     device = PDFPageAggregator(rsrcmgr, laparams=laparams)
     interpreter = PDFPageInterpreter(rsrcmgr, device)
 
+    if progressbar: generator = tqdm(enumerate(PDFPage.create_pages(doc)), desc='pages')
+    else: generator = enumerate(PDFPage.create_pages(doc))
+
     text_content = []
-    for i, page in tqdm(enumerate(PDFPage.create_pages(doc)), desc='pages'):
+    for i, page in generator:
         interpreter.process_page(page)
         # receive the LTPage object for this page
         layout = device.get_result()
         # layout is an LTPage object which may contain child objects like LTTextBox, LTFigure, LTImage, etc.
-        text_content.append(parse_lt_objs(layout, (i + 1), images_folder))
+        text_content.append(
+            parse_lt_objs(
+                layout, (i + 1), images_folder,
+                return_df=return_df,
+                progressbar=progressbar,
+            )
+        )
 
-    return text_content
+    if return_df: return pd.concat(text_content)
+    else: return text_content
 
 
-def get_pages(pdf_doc, pdf_pwd="", images_folder="/tmp"):
+def get_pages(pdf_doc, pdf_pwd="", images_folder="/tmp", return_df=False, progressbar=False):
     """Process each of the pages in this pdf file and return a list of strings representing the text found in each page"""
-    return with_pdf(pdf_doc, _parse_pages, pdf_pwd, images_folder)
+    return with_pdf(pdf_doc, _parse_pages, pdf_pwd, images_folder, return_df, progressbar)
