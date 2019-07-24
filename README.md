@@ -1,3 +1,4 @@
+# About
 PDFMiner (http://www.unixuser.org/~euske/python/pdfminer/index.html)
 is a pdf parsing library written in Python by Yusuke Shinyama.
 
@@ -9,35 +10,44 @@ PDFMiner, which continues where the default documentation
 (http://www.unixuser.org/~euske/python/pdfminer/programming.html#layout)
 stops.
 
-This code is still a work-in-progress, with room for improvement.
+**This code is still a work-in-progress, with room for improvement.**
 
-Usage: import layout_scanner and call get_toc() for a list of the table
-of contents, and get_pages() for the full text.
+# Usage
+## General Usage
+```python
+import layout_scanner
 
-Here are some examples using the Python shell:
+# get a list of the table of contents
+get_toc()
 
->>> import layout_scanner
->>> toc=layout_scanner.get_toc('/path/to/your/pdf-file.pdf')
->>> len(toc)
-  ... should return the number of elements in the pdf document's table
-  of contents (or 0 if there is no TOC)
->>> toc[0]
-  ... a tuple containing the ordinal sequence and the title string,
-  for example:
-(1, u'Introduction')
->>> pages=layout_scanner.get_pages('/path/to/your/pdf-file.pdf')
->>> len(pages)
-  ... should return the number of pages in the pdf document
->>> pages[0]
-  ... a string of all the text on the first page
+# get the full text
+get_pages()
+```
 
-Room for Improvement
+## Practical examples
+```python
+import layout_scanner
+toc=layout_scanner.get_toc('/path/to/your/pdf-file.pdf')
+print(len(toc))
+# the number of elements in the pdf document's table of contents
 
+print(toc[0])
+# a tuple containing the ordinal sequence and the title string,
+#  for example:
+#  (1, u'Introduction')
+
+pages=layout_scanner.get_pages('/path/to/your/pdf-file.pdf')
+print(len(pages))
+# should return the number of pages in the pdf document
+print(pages[0])
+# a string of all the text on the first page
+```
+
+# Room for Improvement
  * Column Merging - while the fuzzy heuristic I described works well for
  the pdf files I've parsed so far, I can imagine more complex documents
  where it would break-down (perhaps this is where the analysis should be
- more sophisticated, and not ignore so many types of pdfminer.layout.LT*
- objects).
+ more sophisticated, and not ignore so many types of pdfminer.layout.LT\* objects).
 
  * Image Extraction - I'd like to be able to be at least as good as
  pdftoimages, and save every file in ppm or pnm default format, but I'm
@@ -62,3 +72,10 @@ Room for Improvement
  on the same page is hard enough, but doing it when they span different
  (even consecutive) pages is worse.
 
+# Contribution
+In this forked project, I made a bit changes into the original one. 
+ * Added support for texts in LTFigures
+ * Optimized data manipulation and storage
+    changed from simple dict to dataframe.
+    This should make further contributions easier.
+ * Added Progressbar
